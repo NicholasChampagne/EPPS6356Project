@@ -49,20 +49,42 @@ function(input, output){
   
   # Inf Page Probability Plot
   output$InfProbPlot <- renderTable({
+    
     # Create a vector of parameters for probability
     probparameter <- c(input$InfSpeedInput,InfProbWeath(),InfProbTime(),InfProbColl(),InfProbInter())
     
     # Create the coefficient matrix to get the log odds
     estmat <- matrix(0, nrow = length(InfProbModel()), ncol = 18)
     for (i in InfProbModel()){
+      # This is to allow the for function to properly put values into the estmat matrix
       i2 <- match(i, InfProbModel())
+      
+      # Just pulling coefficient values from coeff.matrix
       estmat[i2,] <- as.numeric(coeff.matrix$Estimate[c(seq(i,32,4),33:42)])
     }
     
     # Create the parameter matrix to get the log odds
     parmat <- matrix(0, nrow = 18, ncol = 8)
     for (i in 1:8){
+      
+      # Creates a vector for each Road Class with the shiny parameters afterwards
       parmat[,i] <-  c(1,rep(0,max(0,i-2)),ifelse(i == 1,0,1),rep(0,min(6,8-i)),probparameter)
+    }
+    
+    # Create matrix that expresses confidence intervals of predictions
+    probci <- matrix(0, nrow = length(InfProbModel()), ncol = 8)
+    for (i in InfProbModel()) {
+      
+      # Describe for parameters
+      i2 <- match(i, InfProbModel())
+      a <- qt(input$InfAlphInput/200, (96854 + 42)/4, lower.tail = F)
+      
+      # Creating a varying variance-covariance matrix that depends on which stage we are looking at
+      vvc <- v[c(seq(i,32,4),33:42),c(seq(i,32,4),33:42)]
+      
+      # extracting the diagonal values of standard error calculation
+      # non-diagonal values are garbage values with no meaning
+      probci[i2,] <- sqrt(diag(t(parmat) %*% vvc %*% parmat)) * a
     }
     
     # Create a matrix that is the predicted log odds
@@ -70,13 +92,23 @@ function(input, output){
     probest <- as.data.frame(estmat %*% parmat)
     
     # Transforms log odds into probability using e^y / (e^y + 1) where y is the predicted log odds
-    probest <- exp(probest) / (exp(probest) + 1)
+    probprob <- exp(probest) / (exp(probest) + 1)
+    
+    # Constructing upper and lower intervals for prob estimates
+    probupper <-  exp(probest + probci) / (exp(probest + probci) + 1)
+    problower <- exp(probest - probci) / (exp(probest - probci) + 1)
     
     # After conversion into data frame, label columns
-    colnames(probest) <- c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")
+    colnames(probprob) <- c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")
+    
+    #Objects to worry about:
+    #probest - Estimated log odds of model
+    #probprob - Estimated probabilities of model
+    #probupper - Upper bound of calculated probabilities
+    #problower - Lower bound of calculated probabilities
 
     
-    return(probest)
-  })
+    return(problower)
+  }, digits = 6)
   
 }

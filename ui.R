@@ -9,13 +9,27 @@ fluidPage(
     # Anything else is said about the data and model ----
     tabPanel("About",
              sidebarLayout(
-               sidebarPanel(p("This is the about page to learn about the model!")),
-               mainPanel(p("For all the models here are the reference categories:
-                           Road Class = County Road,
-                           Time of Day = Morning,
-                           Weather = Normal,
-                           Collision Type = One Car,
-                           At Intersection = False"))
+               sidebarPanel(p("This project was created by:"),
+                            p("Alden Felix"),
+                            p("Jim Pan"),
+                            p("Nicholas Champagne"),
+                            p("Will Kilcoyne")),
+               mainPanel(
+                 tabsetPanel(
+                  tabPanel("Description",
+                         p("This project looks at the effect of Road Classification on
+                           the severity of injuries in alcohol related crashes, using data from 2018."),
+                         p("The data for the project comes from the Texas Deparment of Transportation Crash Records Information System ")
+                         ),
+                  tabPanel("Model",
+                         p("The model for this project uses a cumulative logit regression,
+                           where the serverity of the crash ranges from 1 to 5, where 5 is the most severe (death)."),
+                         p("The regression uses a stopping ratio, which means that the regression predicts the log odds of being at or lower than 
+                           the current category versus being in a higher category. Therefore, when beta is positive, the crash is less likely to be severe, while
+                           when beta is negative, the crash is more likely to severe")
+                         )
+                 )
+               )
              )
     ),
     
@@ -95,7 +109,14 @@ fluidPage(
                              label = "Select Type of Collision",
                              choices = c("One Car", "Same Direction", "Angular", "Opposite Direction", "Other"),
                              selected = "Opposite Direction"
-                )
+                ),
+                
+                # Input: Numeric Input for Alpha level
+                numericInput("InfAlphInput",
+                             label = "Input alpha level as integer:",
+                             min = 1,
+                             max = 10,
+                             value = 5)
                   
                  
                ),
@@ -104,7 +125,7 @@ fluidPage(
                  #Output: Plot for viewing results
                  tableOutput("InfProbPlot")
                )
-            )
+            ) 
     ),
     
     # Page dedicated to anything else ----
