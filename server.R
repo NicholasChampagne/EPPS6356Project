@@ -1,11 +1,26 @@
 function(input, output){
   # Input parameters ----
   
+  # Input for DESC page PIE
+  
+    # Select variable for chart
+    DescPieVar <- reactive({
+      
+      # Replace space with . in variable name
+      gsub(" ", ".", input$DescRadio)
+    })
+  # Input for INF page COEF
+    
+    #Select which Models to Display
+    InfCoefModel <- reactive({
+      as.numeric(gsub("Stage ", "", input$InfCoefCheck))
+    })
+  
   # Input for INF page PROB
   
     # Select which Models to Display
     InfProbModel <- reactive({
-      as.numeric(gsub("Stage ", "", input$InfCheck))
+      as.numeric(gsub("Stage ", "", input$InfProbCheck))
     })
     
     # Input Parameter Transformations
@@ -41,9 +56,26 @@ function(input, output){
   
   # Output functions ----
   # Desc Page, Descriptive Plot
-  output$DescPlot <- renderPlot({
-    plot <- plot(x = 1:10, y = 1:10,
-                 main = input$DescRadio)
+  output$DescPlot <- renderTable({
+    
+    # Create a frequency table of Selected Variable
+    tab <- table(crash[,DescPieVar()])
+    
+  })
+  
+  # Inf Page Coefficient Plot
+  output$InfCoefPlot <- renderTable({
+    
+    # for loop to remove non-selected models
+    seq <- c()
+    for (i in InfCoefModel()){
+      seq <- c(seq,seq(i,32,4))
+    }
+    
+    # reduce data to just specified models
+    coeff.red <- coeff.matrix[c(sort(seq),33:42),]
+    
+    return(coeff.red)
     
   })
   
@@ -60,7 +92,7 @@ function(input, output){
       i2 <- match(i, InfProbModel())
       
       # Just pulling coefficient values from coeff.matrix
-      estmat[i2,] <- as.numeric(coeff.matrix$Estimate[c(seq(i,32,4),33:42)])
+      estmat[i2,] <- coeff.matrix$estimate[c(seq(i,32,4),33:42)]
     }
     
     # Create the parameter matrix to get the log odds
@@ -80,7 +112,7 @@ function(input, output){
       a <- qt(input$InfAlphInput/200, (96854 + 42)/4, lower.tail = F)
       
       # Creating a varying variance-covariance matrix that depends on which stage we are looking at
-      vvc <- v[c(seq(i,32,4),33:42),c(seq(i,32,4),33:42)]
+      vvc <- vcov[c(seq(i,32,4),33:42),c(seq(i,32,4),33:42)]
       
       # extracting the diagonal values of standard error calculation
       # non-diagonal values are garbage values with no meaning
@@ -109,6 +141,6 @@ function(input, output){
 
     
     return(problower)
-  }, digits = 6)
+  }, digits = 3)
   
 }

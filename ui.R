@@ -34,7 +34,10 @@ fluidPage(
     ),
     
     # Page dedicated to the Descriptive statistics of the model ----
-    tabPanel("Desc",
+    navbarMenu("Descriptive",
+      
+      # Descriptive Pie Chart                 
+      tabPanel("Pie",
              
              # Sidebar-mainpanel layout for Descriptive Statistics
              sidebarLayout(
@@ -45,30 +48,61 @@ fluidPage(
                  # Input: Radio Buttons for variable selection
                  radioButtons("DescRadio",
                               label = "Select Varaible:",
-                              choices = colnames(crash),
-                              selected = "Crash.Severity")
+                              choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
+                              selected = "Crash Severity")
                  
                ),
                mainPanel(
                  
                  # Output: Dynamic plot for Viewing Data
-                 plotOutput("DescPlot")
+                 tableOutput("DescPlot")
                  
                )
             )
+    )
     ),
     
     # Page dedicated to the Inferential statistics of the model ----
-    tabPanel("Inf",
+    navbarMenu("Inferential",
+               
+      # Coefficient Plot of Variables
+      tabPanel("Coefficient Plot",
+               
+               # Sidebar-mainpanel layout for Dot-Whisker Plot
+               sidebarLayout(
+                 
+                 # Input Parameters for Coefficient Plot
+                 sidebarPanel(
+                   
+                   # Input: check-box for models
+                   checkboxGroupInput("InfCoefCheck",
+                                      label = "Select Models:",
+                                      choices = c("Stage 1", "Stage 2", "Stage 3", "Stage 4"),
+                                      selected = c("Stage 1", "Stage 2", "Stage 3", "Stage 4")
+                   )
+                 ),
+                 
+                # Output Panel
+                 mainPanel(
+                   
+                   # Output: Coefficient Plot for parameters
+                   tableOutput("InfCoefPlot")
+                   
+                 )
+               )
+      ),
+      
+      # Probability Plot of Variables
+      tabPanel("Probability Plot",
              
-             # Sidebar-mainpanel layout for Descriptive Statistics
+             # Sidebar-mainpanel layout for Inferential Statistics
              sidebarLayout(
                
-               # Input Parameters for Inferential Statistics
+               # Input Parameters for Probability Plot
                sidebarPanel(
                  
                 # Input: Check boxes for Models to Display
-                checkboxGroupInput("InfCheck",
+                checkboxGroupInput("InfProbCheck",
                                     label = "Select Models:",
                                     choices = c("Stage 1", "Stage 2", "Stage 3", "Stage 4"),
                                     selected = c("Stage 1", "Stage 2", "Stage 3", "Stage 4")
@@ -120,12 +154,15 @@ fluidPage(
                   
                  
                ),
+               
+               # Output Panel
                mainPanel(
                  
-                 #Output: Plot for viewing results
+                 # Output: Plot for viewing results
                  tableOutput("InfProbPlot")
                )
             ) 
+    )
     ),
     
     # Page dedicated to anything else ----

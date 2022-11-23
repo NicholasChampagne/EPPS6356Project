@@ -25,33 +25,12 @@ s <- summaryvglm(fit.1); s
 # Other funciton by changing the rownames of the matrix into its own column
 coeff.matrix <- s@coef3; coeff.matrix
 coeff.matrix <- cbind(coeff.matrix,c(rownames(coeff.matrix)))
-colnames(coeff.matrix) <- c(colnames(coeff.matrix)[1:4], "Variable")
+colnames(coeff.matrix) <- c("estimate", "std.error", colnames(coeff.matrix)[3:4], "term")
 rownames(coeff.matrix) <- NULL
 coeff.matrix <- data.frame(coeff.matrix[,c(5,1:4)])
+coeff.matrix[,2:5] <- lapply(coeff.matrix[2:5], as.numeric) 
 
-predict(fit.1, newdata = data.frame(Road.Class = "TOLLWAY",
-                                    Speed.Limit = 45,
-                                    Weather = "Normal Weather",
-                                    Type.of.Collision = "OPPOSITE",
-                                    Time.of.Day = "Morning",
-                                    At.Intersection.Flag = "FALSE"
-                                    ), se.fit = T)
-
-p1 <- c(c(1,0,0,0),c(rep(0,28)),45,0,c(0,0,0),c(0,1,0,0),0); p1
-p2 <- c(c(1,0,0,0),c(1,rep(0,27)),45,0,c(0,0,0),c(0,1,0,0),0); p2
-p3 <- c(c(0,0,1,0),c(rep(0,2),1,rep(0,25)),45,0,c(0,0,0),c(0,1,0,0),0); p3
-p4 <- c(c(0,1,0,0),c(rep(0,21),1,rep(0,6)),45,0,c(0,0,0),c(0,1,0,0),0); p4
 vcov <- vcov(fit.1)
-
-
-sqrt(t(p4) %*% vcov %*% p4)
-
-qt(0.025, (96854 + 42)/4, lower.tail = F)
-
-m1 <- matrix(1, nrow = 5, ncol = 5)
-
-m2 <- matrix(c(1,2,3,4,5), nrow = 5, ncol = 5)
-m1 + m2
 
 save(coeff.matrix, file = "Coeff.RData")
 save(vcov, file = "vcov.RData")
@@ -63,3 +42,11 @@ load("vcov.RData")
 # Code test methods ----
 
 unique(crash$Road.Class)
+seq <- c()
+for (i in 1:2){
+  seq <- c(seq,seq(i,32,4))
+  
+}
+sort(seq)
+
+
