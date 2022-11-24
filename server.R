@@ -4,11 +4,28 @@ function(input, output){
   # Input for DESC page PIE
   
     # Select variable for chart
-    DescPieVar <- reactive({
+    DescTabVar <- reactive({
       
       # Replace space with . in variable name
       gsub(" ", ".", input$DescRadio)
     })
+    
+    # Select variable for chart
+    DescPieVar <- reactive({
+      
+      # Replace space with . in variable name
+      gsub(" ", ".", input$DescRadio2)
+    })
+    
+    # Select variable for chart
+    DescBarVar <- reactive({
+      
+      # Replace space with . in variable name
+      gsub(" ", ".", input$DescRadio3)
+    })
+    
+    
+    
   # Input for INF page COEF
     
     #Select which Models to Display
@@ -21,6 +38,27 @@ function(input, output){
     # Select which Models to Display
     InfProbModel <- reactive({
       as.numeric(gsub("Stage ", "", input$InfProbCheck))
+    })
+    
+    # How to Display plots
+    InfProbDisplay <- reactive({
+      switch(input$InfSortInput,
+             "Model" = 1,
+             "Class" = 0)
+    })
+    
+    # Select which Road classes to Display
+    InfClassModel <- reactive({
+      sapply(input$InfProbClass, switch,
+             "County Road" = 1,
+             "City Street" = 2,
+             "Farm to Market" = 3,
+             "Interstate" = 4,
+             "Non-Trafficway" = 5,
+             "Other Road" = 6,
+             "Tollways" = 7,
+             "US & State Highways" = 8)
+      
     })
     
     # Input Parameter Transformations
@@ -55,16 +93,50 @@ function(input, output){
   
   
   # Output functions ----
+    
   # Desc Page, Descriptive Plot
-  output$DescPlot <- renderTable({
+  output$FreqPlot <- renderTable({
     
     # Create a frequency table of Selected Variable
-    tab <- table(crash[,DescPieVar()])
+    tab <- table(crash[,DescTabVar()])
     
   })
   
+  # Desc Page, Pie Plot
+    output$PiePlot <- renderPlotly({
+      # Create a pie chart of the Selected Variable
+      
+      counts <-  crash %>% count(across(DescPieVar()))
+      
+      plot_ly(data = counts, values = ~n, labels = ~get(DescPieVar()), 
+              type = 'pie',
+              textposition = 'inside',
+              textinfo = 'label+percent', 
+              width = 800, height = 800) %>% 
+        layout(title = "Makeup of Accident Data by Variable")
+    })
+    
+    # Desc Page, Bar Plot
+    output$BarPlot <- renderPlotly({
+      # Create a Bar Plot of the Selected Variable
+      
+      factor_data <- data.frame(lapply(crash, factor))
+      
+      bar_var <- data.frame(factor_data %>% count(across(DescBarVar())))
+      
+      bar_var <- bar_var %>% 
+        mutate(perc = paste0(sprintf("%4.1f", n / sum(n) * 100), "%"))
+      
+      plot_ly(data = bar_var, x = ~get(DescBarVar()), y = ~n,
+              type = "bar", text = ~paste0(sprintf("%4.1f", n / sum(n) * 100), "%"),
+              textposition = "outside") %>% 
+        layout(xaxis = list(categoryorder = "total ascending"),
+               yaxis = list(title = "Number of Accidents"),
+               title = "Makeup of Accident Data by Variable")
+    })
+  
   # Inf Page Coefficient Plot
-  output$InfCoefPlot <- renderTable({
+  output$InfCoefPlot <- renderPlot({
     
     # for loop to remove non-selected models
     seq <- c()
@@ -75,7 +147,12 @@ function(input, output){
     # reduce data to just specified models
     coeff.red <- coeff.matrix[c(sort(seq),33:42),]
     
-    return(coeff.red)
+    dwplot(coeff.red, vline = geom_vline(
+      xintercept = 0,
+      colour = "grey60",
+      linetype = 2
+    )
+    )
     
   })
   
@@ -121,26 +198,34 @@ function(input, output){
     
     # Create a matrix that is the predicted log odds
     # Rows are models, columns are Road classes
-    probest <- as.data.frame(estmat %*% parmat)
+    probest <- estmat %*% parmat
     
     # Transforms log odds into probability using e^y / (e^y + 1) where y is the predicted log odds
     probprob <- exp(probest) / (exp(probest) + 1)
-    
-    # Constructing upper and lower intervals for prob estimates
     probupper <-  exp(probest + probci) / (exp(probest + probci) + 1)
     problower <- exp(probest - probci) / (exp(probest - probci) + 1)
     
-    # After conversion into data frame, label columns
-    colnames(probprob) <- c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")
     
     #Objects to worry about:
     #probest - Estimated log odds of model
     #probprob - Estimated probabilities of model
     #probupper - Upper bound of calculated probabilities
     #problower - Lower bound of calculated probabilities
+    names <- if (input$InfSortInput == "Model")
+    {rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], times = length(InfProbModel()))} else
+    {rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], each = length(InfProbModel()))}
+    
+    probmodel <- data.frame(
+      "Model" = names,
+      "prob" = c(if (input$InfSortInput == "Model") {t(probprob[,InfClassModel()])} else {probprob[,InfClassModel()]}),
+      "lower" = c(if (input$InfSortInput == "Model") {t(problower[,InfClassModel()])} else {problower[,InfClassModel()]}),
+      "upper" = c(if (input$InfSortInput == "Model") {t(probupper[,InfClassModel()])} else {probupper[,InfClassModel()]})
+    )
+    
+    
 
     
-    return(problower)
+    return(probmodel)
   }, digits = 3)
   
 }

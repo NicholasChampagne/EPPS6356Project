@@ -35,31 +35,79 @@ fluidPage(
     
     # Page dedicated to the Descriptive statistics of the model ----
     navbarMenu("Descriptive",
-      
-      # Descriptive Pie Chart                 
-      tabPanel("Pie",
-             
-             # Sidebar-mainpanel layout for Descriptive Statistics
-             sidebarLayout(
                
-               #Input Parameters for Descriptive Statistics
-               sidebarPanel(
-                 
-                 # Input: Radio Buttons for variable selection
-                 radioButtons("DescRadio",
-                              label = "Select Varaible:",
-                              choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
-                              selected = "Crash Severity")
-                 
+               # Descriptive Frequency Chart                 
+               tabPanel("Frequency",
+                        
+                        # Sidebar-mainpanel layout for Descriptive Statistics
+                        sidebarLayout(
+                          
+                          #Input Parameters for Descriptive Statistics
+                          sidebarPanel(
+                            
+                            # Input: Radio Buttons for variable selection
+                            radioButtons("DescRadio",
+                                         label = "Select Varaible:",
+                                         choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
+                                         selected = "Crash Severity")
+                            
+                          ),
+                          mainPanel(
+                            
+                            # Output: Dynamic plot for Viewing Data
+                            tableOutput("FreqPlot")
+                            
+                          )
+                        )
                ),
-               mainPanel(
-                 
-                 # Output: Dynamic plot for Viewing Data
-                 tableOutput("DescPlot")
-                 
+               
+               # Descriptive Pie Chart                 
+               tabPanel("Pie",
+                        
+                        # Sidebar-mainpanel layout for Descriptive Statistics
+                        sidebarLayout(
+                          
+                          #Input Parameters for Descriptive Statistics
+                          sidebarPanel(
+                            
+                            # Input: Radio Buttons for variable selection
+                            radioButtons("DescRadio2",
+                                         label = "Select Varaible:",
+                                         choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
+                                         selected = "Crash Severity")
+                            
+                          ),
+                          mainPanel(
+                            
+                            # Output: Dynamic plot for Viewing Data
+                            plotlyOutput("PiePlot")
+                          )
+                        )
+               ),
+               
+               # Descriptive Bar Chart                 
+               tabPanel("Bar",
+                        
+                        # Sidebar-mainpanel layout for Descriptive Statistics
+                        sidebarLayout(
+                          
+                          # #Input Parameters for Descriptive Statistics
+                          sidebarPanel(
+                            
+                            # Input: Radio Buttons for variable selection
+                            radioButtons("DescRadio3",
+                                         label = "Select Varaible:",
+                                         choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
+                                         selected = "Crash Severity")
+                            
+                          ),
+                          mainPanel(
+                            
+                            # Output: Dynamic plot for Viewing Data
+                            plotlyOutput("BarPlot")
+                          )
+                        )
                )
-            )
-    )
     ),
     
     # Page dedicated to the Inferential statistics of the model ----
@@ -86,7 +134,7 @@ fluidPage(
                  mainPanel(
                    
                    # Output: Coefficient Plot for parameters
-                   tableOutput("InfCoefPlot")
+                   plotOutput("InfCoefPlot")
                    
                  )
                )
@@ -107,6 +155,21 @@ fluidPage(
                                     choices = c("Stage 1", "Stage 2", "Stage 3", "Stage 4"),
                                     selected = c("Stage 1", "Stage 2", "Stage 3", "Stage 4")
                  ),
+                
+                # Input: Check boxes for Classes to Display
+                checkboxGroupInput("InfProbClass",
+                                   label = "Select Road Class:",
+                                   choices = c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways"),
+                                   selected = c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")
+                ),
+                
+                #Input: Radio Buttons for Bar building method
+                radioButtons("InfSortInput",
+                             label = "Sort by:",
+                             choices = c("Model", "Class"),
+                             selected = "Model"
+                ),
+                
                  
                 # Input: Radio Buttons for Intersection Flag
                 radioButtons("InfInterInput",
