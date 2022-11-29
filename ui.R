@@ -8,6 +8,7 @@ fluidPage(
     # First Tab Panel that servers as a landing page to describe the basics of the data before
     # Anything else is said about the data and model ----
     tabPanel("About",
+             withMathJax(),
              sidebarLayout(
                sidebarPanel(p("This project was created by:"),
                             p("Alden Felix"),
@@ -18,15 +19,29 @@ fluidPage(
                  tabsetPanel(
                   tabPanel("Description",
                          p("This project looks at the effect of Road Classification on
-                           the severity of injuries in alcohol related crashes, using data from 2018."),
-                         p("The data for the project comes from the Texas Deparment of Transportation Crash Records Information System ")
+                           the severity of injuries in alcohol related crashes, using data from the
+                           Texas Deparment of Transportation Crash Records Information System in 2018."),
+                         p("Crash Severity ranges in order of:"),
+                         p("N - Not Injured"),
+                         p("C - Possible Injury"),
+                         p("B - Suspected Minor Injury"),
+                         p("A - Suspected Serious Injury"),
+                         p("K - Fatal Injury")
                          ),
                   tabPanel("Model",
-                         p("The model for this project uses a cumulative logit regression,
-                           where the serverity of the crash ranges from 1 to 5, where 5 is the most severe (death)."),
+                         p("The model for this project uses a cumulative logit regression with a stopping ratio,
+                           where the serverity of the crash is N,C,B,A,K, where K is the most severe (death).
+                           Since there are 5 categories of crash severity, there will be 4 regressions, with j representing the crash severity.
+                           Each model takes the form of:"),
+                         helpText("\\begin{align*}
+                                  ln\\left(\\frac{Pr(Y_i \\le j)}{Pr(Y_i > j)}\\right) &= \\beta_1 + \\beta_2 RoadClass + \\beta_3 SpeedLimit + \\beta_4 Weather
+                                  \\\\ &+ \\beta_5 TimeofDay + \\beta_6 TypeofCollision + \\beta_7 Intersection
+                                  \\end{align*}"),
                          p("The regression uses a stopping ratio, which means that the regression predicts the log odds of being at or lower than 
                            the current category versus being in a higher category. Therefore, when beta is positive, the crash is less likely to be severe, while
-                           when beta is negative, the crash is more likely to severe")
+                           when beta is negative, the crash is more likely to severe"),
+                         
+                         
                          )
                  )
                )
@@ -134,7 +149,8 @@ fluidPage(
                  mainPanel(
                    
                    # Output: Coefficient Plot for parameters
-                   plotOutput("InfCoefPlot")
+                   plotOutput("InfCoefPlot",
+                              height = "800px")
                    
                  )
                )
@@ -222,7 +238,7 @@ fluidPage(
                mainPanel(
                  
                  # Output: Plot for viewing results
-                 tableOutput("InfProbPlot")
+                 plotOutput("InfProbPlot")
                )
             ) 
     )

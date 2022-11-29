@@ -150,14 +150,13 @@ function(input, output){
     dwplot(coeff.red, vline = geom_vline(
       xintercept = 0,
       colour = "grey60",
-      linetype = 2
-    )
+      linetype = 2)
     )
     
   })
   
   # Inf Page Probability Plot
-  output$InfProbPlot <- renderTable({
+  output$InfProbPlot <- renderPlot({
     
     # Create a vector of parameters for probability
     probparameter <- c(input$InfSpeedInput,InfProbWeath(),InfProbTime(),InfProbColl(),InfProbInter())
@@ -215,17 +214,26 @@ function(input, output){
     {rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], times = length(InfProbModel()))} else
     {rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], each = length(InfProbModel()))}
     
+    # Data frame with all the data combined into a singluar table
     probmodel <- data.frame(
-      "Model" = names,
+      "Model" = paste0(names," ",if (input$InfSortInput == "Model") {rep(c(InfProbModel()), each = length(InfClassModel()))} else {rep(c(InfProbModel()), times = length(InfClassModel()))} ),
       "prob" = c(if (input$InfSortInput == "Model") {t(probprob[,InfClassModel()])} else {probprob[,InfClassModel()]}),
       "lower" = c(if (input$InfSortInput == "Model") {t(problower[,InfClassModel()])} else {problower[,InfClassModel()]}),
       "upper" = c(if (input$InfSortInput == "Model") {t(probupper[,InfClassModel()])} else {probupper[,InfClassModel()]})
     )
     
+    #error.bar <- function(x, upper, lower=upper, length=0.1,...){
+    #  arrows(x, upper, x, lower, angle=90, code=3, length=length, ...)
+    #}
+    #plot <- barplot(probmodel$prob)
+    #error.bar(plot, probmodel$upper, probmodel$lower, length = 0.05)
     
+    plot <- ggplot(probmodel) + 
+      geom_col(aes(x = Model, y = prob), fill = "skyblue") + 
+      geom_errorbar(aes(x = Model, ymin = lower, ymax = upper), width = 0.4, colour = "black") +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
-    
-    return(probmodel)
-  }, digits = 3)
+    return(plot)
+  })
   
 }

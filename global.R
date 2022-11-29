@@ -1,4 +1,3 @@
-library(shinyjs)
 library(plotly)
 library(dplyr)
 library(dotwhisker)
