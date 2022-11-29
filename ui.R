@@ -238,7 +238,8 @@ fluidPage(
                mainPanel(
                  
                  # Output: Plot for viewing results
-                 plotOutput("InfProbPlot")
+                 plotOutput("InfProbPlot",
+                            height = "800px")
                )
             ) 
     )

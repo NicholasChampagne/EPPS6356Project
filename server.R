@@ -43,8 +43,8 @@ function(input, output){
     # How to Display plots
     InfProbDisplay <- reactive({
       switch(input$InfSortInput,
-             "Model" = 1,
-             "Class" = 0)
+             "Model" = c("Model", "Class"),
+             "Class" = c("Class", "Model"))
     })
     
     # Select which Road classes to Display
@@ -216,10 +216,11 @@ function(input, output){
     
     # Data frame with all the data combined into a singluar table
     probmodel <- data.frame(
-      "Model" = paste0(names," ",if (input$InfSortInput == "Model") {rep(c(InfProbModel()), each = length(InfClassModel()))} else {rep(c(InfProbModel()), times = length(InfClassModel()))} ),
-      "prob" = c(if (input$InfSortInput == "Model") {t(probprob[,InfClassModel()])} else {probprob[,InfClassModel()]}),
-      "lower" = c(if (input$InfSortInput == "Model") {t(problower[,InfClassModel()])} else {problower[,InfClassModel()]}),
-      "upper" = c(if (input$InfSortInput == "Model") {t(probupper[,InfClassModel()])} else {probupper[,InfClassModel()]})
+      "Model" = paste0("Model ",rep(InfProbModel(), each = length(InfClassModel()))),
+      "Class" = rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], times = length(InfProbModel())),
+      "prob" = c(t(probprob[,InfClassModel()])),
+      "lower" = c(t(problower[,InfClassModel()])),
+      "upper" = c(t(probupper[,InfClassModel()]))
     )
     
     #error.bar <- function(x, upper, lower=upper, length=0.1,...){
@@ -228,9 +229,9 @@ function(input, output){
     #plot <- barplot(probmodel$prob)
     #error.bar(plot, probmodel$upper, probmodel$lower, length = 0.05)
     
-    plot <- ggplot(probmodel) + 
-      geom_col(aes(x = Model, y = prob), fill = "skyblue") + 
-      geom_errorbar(aes(x = Model, ymin = lower, ymax = upper), width = 0.4, colour = "black") +
+    plot <- ggplot(probmodel, aes(fill = eval(str2lang(InfProbDisplay()[2])), y = prob, x = eval(str2lang(InfProbDisplay()[1])))) + 
+      geom_bar(position = "dodge", stat = "identity") + 
+      geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(.9), width = 0.4, colour = "black") +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
     return(plot)
