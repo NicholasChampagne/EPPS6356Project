@@ -182,8 +182,8 @@ fluidPage(
                 #Input: Radio Buttons for Bar building method
                 radioButtons("InfSortInput",
                              label = "Sort by:",
-                             choices = c("Model", "Class"),
-                             selected = "Model"
+                             choices = c("Stage", "Class"),
+                             selected = "Stage"
                 ),
                 
                  

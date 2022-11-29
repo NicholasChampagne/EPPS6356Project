@@ -43,8 +43,8 @@ function(input, output){
     # How to Display plots
     InfProbDisplay <- reactive({
       switch(input$InfSortInput,
-             "Model" = c("Model", "Class"),
-             "Class" = c("Class", "Model"))
+             "Stage" = c("Stage", "Class"),
+             "Class" = c("Class", "Stage"))
     })
     
     # Select which Road classes to Display
@@ -185,7 +185,7 @@ function(input, output){
       
       # Describe for parameters
       i2 <- match(i, InfProbModel())
-      a <- qt(input$InfAlphInput/200, (96854 + 42)/4, lower.tail = F)
+      a <- qt(input$InfAlphInput/200, nrow(crash), lower.tail = F)
       
       # Creating a varying variance-covariance matrix that depends on which stage we are looking at
       vvc <- vcov[c(seq(i,32,4),33:42),c(seq(i,32,4),33:42)]
@@ -210,29 +210,22 @@ function(input, output){
     #probprob - Estimated probabilities of model
     #probupper - Upper bound of calculated probabilities
     #problower - Lower bound of calculated probabilities
-    names <- if (input$InfSortInput == "Model")
-    {rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], times = length(InfProbModel()))} else
-    {rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], each = length(InfProbModel()))}
     
     # Data frame with all the data combined into a singluar table
     probmodel <- data.frame(
-      "Model" = paste0("Model ",rep(InfProbModel(), each = length(InfClassModel()))),
+      "Stage" = paste0("Stage ",rep(InfProbModel(), each = length(InfClassModel()))),
       "Class" = rep(c("County Road", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways")[InfClassModel()], times = length(InfProbModel())),
       "prob" = c(t(probprob[,InfClassModel()])),
       "lower" = c(t(problower[,InfClassModel()])),
       "upper" = c(t(probupper[,InfClassModel()]))
     )
     
-    #error.bar <- function(x, upper, lower=upper, length=0.1,...){
-    #  arrows(x, upper, x, lower, angle=90, code=3, length=length, ...)
-    #}
-    #plot <- barplot(probmodel$prob)
-    #error.bar(plot, probmodel$upper, probmodel$lower, length = 0.05)
-    
-    plot <- ggplot(probmodel, aes(fill = eval(str2lang(InfProbDisplay()[2])), y = prob, x = eval(str2lang(InfProbDisplay()[1])))) + 
+    plot <- ggplot(probmodel, aes(fill = eval(str2lang(InfProbDisplay()[2])), y = prob, x = eval(str2lang(InfProbDisplay()[1]))) ) + 
       geom_bar(position = "dodge", stat = "identity") + 
       geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(.9), width = 0.4, colour = "black") +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+      xlab(InfProbDisplay()[1]) + ylab("Probablity of Stopping") +
+      labs(fill = InfProbDisplay()[2])
 
     return(plot)
   })
