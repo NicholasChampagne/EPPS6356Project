@@ -213,15 +213,15 @@ fluidPage(
                 # Input: Radio Buttons for Weather
                 radioButtons("InfWeathInput",
                              label = "Select Weather",
-                             choices = c("Normal Weather", "Dangerous Weather"),
-                             selected = "Normal Weather"
+                             choices = c("Normal", "Dangerous"),
+                             selected = "Normal"
                 ),
                 
                 # Input: Radio Buttons for Type of Collision
                 radioButtons("InfCollInput",
                              label = "Select Type of Collision",
-                             choices = c("One Car", "Same Direction", "Angular", "Opposite Direction", "Other"),
-                             selected = "Opposite Direction"
+                             choices = c("One Car", "Same", "Angular", "Opposite", "Other"),
+                             selected = "Opposite"
                 ),
                 
                 # Input: Numeric Input for Alpha level
@@ -229,7 +229,9 @@ fluidPage(
                              label = "Input alpha level as integer:",
                              min = 1,
                              max = 10,
-                             value = 5)
+                             value = 5),
+                downloadButton("InfCoefDwn",
+                               label = "Download")
                   
                  
                ),
@@ -243,14 +245,6 @@ fluidPage(
                )
             ) 
     )
-    ),
-    
-    # Page dedicated to anything else ----
-    tabPanel("Other",
-             sidebarLayout(
-               sidebarPanel(p("text")),
-               mainPanel(p("main"))
-            )
     )
   )
 )

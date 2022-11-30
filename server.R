@@ -1,5 +1,5 @@
 function(input, output){
-  # Input parameters ----
+  #### Input parameters ####
   
   # Input for DESC page PIE
   
@@ -78,21 +78,21 @@ function(input, output){
     
     InfProbWeath <- reactive({
       switch(input$InfWeathInput,
-             "Normal Weather" = 0,
-             "Dangerous Weather" = 1)
+             "Normal" = 0,
+             "Dangerous" = 1)
     }) 
     
     InfProbColl <- reactive({
       switch(input$InfCollInput,
              "One Car" = c(0,0,0,0),
              "Angular" = c(1,0,0,0),
-             "Opposite Direction" = c(0,1,0,0),
+             "Opposite" = c(0,1,0,0),
              "Other" = c(0,0,1,0),
-             "Same Direction" = c(0,0,0,1))
+             "Same" = c(0,0,0,1))
     })
   
   
-  # Output functions ----
+  #### Output functions ####
     
   # Desc Page, Descriptive Plot
   output$FreqPlot <- renderTable({
@@ -156,7 +156,8 @@ function(input, output){
   })
   
   # Inf Page Probability Plot
-  output$InfProbPlot <- renderPlot({
+  # Generate the Probability Table
+  InfProbTable <- reactive({
     
     # Create a vector of parameters for probability
     probparameter <- c(input$InfSpeedInput,InfProbWeath(),InfProbTime(),InfProbColl(),InfProbInter())
@@ -185,7 +186,7 @@ function(input, output){
       
       # Describe for parameters
       i2 <- match(i, InfProbModel())
-      a <- qt(input$InfAlphInput/200, nrow(crash), lower.tail = F)
+      a <- qt(input$InfAlphInput/200, nrow(crash) - nrow(coeff.matrix), lower.tail = F)
       
       # Creating a varying variance-covariance matrix that depends on which stage we are looking at
       vvc <- vcov[c(seq(i,32,4),33:42),c(seq(i,32,4),33:42)]
@@ -219,15 +220,73 @@ function(input, output){
       "lower" = c(t(problower[,InfClassModel()])),
       "upper" = c(t(probupper[,InfClassModel()]))
     )
+    return(probmodel)
+  })
+  
+  # Probability Plot function
+  InfProbPlotFunc <- reactive({
     
-    plot <- ggplot(probmodel, aes(fill = eval(str2lang(InfProbDisplay()[2])), y = prob, x = eval(str2lang(InfProbDisplay()[1]))) ) + 
+    probmodel <- InfProbTable()
+    
+    # Table that lists values selected
+    estest <- data.frame(
+      "Variable" = c("Speed Limit", "Weather", "Time of Day", "Type of Collision", "Intersection", "Alpha"),
+      "Value" = c(input$InfSpeedInput,input$InfWeathInput,input$InfTimeInput,input$InfCollInput,input$InfInterInput, input$InfAlphInput/100)
+    )
+    
+    # estest as grob
+    estest.grob <- tableGrob(estest, rows = NULL )
+    
+    
+    # Generate ggplot bar plot mapping probability
+    plot.base <- ggplot(probmodel, aes(fill = eval(str2lang(InfProbDisplay()[2])), y = prob, x = eval(str2lang(InfProbDisplay()[1]))) ) + 
       geom_bar(position = "dodge", stat = "identity") + 
       geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(.9), width = 0.4, colour = "black") +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 12, family = "serif"),
+            axis.title = element_text(size = 18, family = "serif"),
+            axis.text.y = element_text(size = 12, family = "serif"),
+            plot.title = element_text(size = 18, family = "serif"),
+            legend.title = element_text(size = 18, family = "serif"),
+            legend.text = element_text(size = 18, family = "serif"),
+            legend.key.size = unit(1, "cm")) + 
       xlab(InfProbDisplay()[1]) + ylab("Probablity of Stopping") +
-      labs(fill = InfProbDisplay()[2])
-
-    return(plot)
+      ggtitle(paste0("Probability Representation of Road Class sorted by ",InfProbDisplay()[1])) + 
+      labs(fill = InfProbDisplay()[2]) + 
+      scale_fill_manual(values = c("#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#0072B2", "#F0E442", "#D55E00", "#999999")[c(if (input$InfSortInput == "Class") {InfProbModel()} else {InfClassModel()})])
+    
+    # Nab instructions to build legend
+    g_legend <- function(a.gplot){
+      tmp <- ggplot_gtable(ggplot_build(plot.base))
+      leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+      legend <- tmp$grobs[[leg]]
+      return(legend)
+    }
+    
+    # Legend Grob
+    legend <- g_legend(plot.base)
+    
+    # Arrange table under legend
+    plot.fin <- grid.arrange(plot.base + theme(legend.position = "none"), 
+                             widths=c(3/4, 1/4),
+                             arrangeGrob(legend, estest.grob), ncol = 2)
+    
+    # Return grid instructions (cannot be drawn normally, lookup how to draw it depending on circumstance)
+    return(plot.fin)
   })
+  
+  output$InfProbPlot <- renderPlot({
+    # print plot with table grobs
+    print(InfProbPlotFunc())
+  })
+  
+  output$InfCoefDwn <- downloadHandler(
+    # Saving the Probability Plot
+    filename = "test.png",
+    content = function(file) {
+      png(file, width = 1200, height = 800, units = "px")
+      grid.draw(InfProbPlotFunc())
+      dev.off()
+    }
+  )
   
 }
