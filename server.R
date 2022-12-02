@@ -30,7 +30,9 @@ function(input, output){
     
     #Select which Models to Display
     InfCoefModel <- reactive({
-      as.numeric(gsub("Stage ", "", input$InfCoefCheck))
+      if ("All" %in% input$InfCoefCheck) {
+        c(gsub("Stage ", "", input$InfCoefCheck[1:(length(input$InfCoefCheck)-1)]),"All")
+      } else {gsub("Stage ", "", input$InfCoefCheck)}
     })
   
   # Input for INF page PROB
@@ -130,7 +132,8 @@ function(input, output){
       plot_ly(data = bar_var, x = ~get(DescBarVar()), y = ~n,
               type = "bar", text = ~paste0(sprintf("%4.1f", n / sum(n) * 100), "%"),
               textposition = "outside") %>% 
-        layout(xaxis = list(categoryorder = "total ascending"),
+        layout(xaxis = list(categoryorder = "total ascending", 
+                            title = input$DescRadio3),
                yaxis = list(title = "Number of Accidents"),
                title = "Makeup of Accident Data by Variable")
     })
@@ -140,12 +143,19 @@ function(input, output){
     
     # for loop to remove non-selected models
     seq <- c()
-    for (i in InfCoefModel()){
+    for (i in as.numeric(InfCoefModel()[InfCoefModel() != "All"])) {
       seq <- c(seq,seq(i,32,4))
     }
     
+    # Load in coeff.matrix
+    coeff.mat <- coeff.matrix
+    
+    # New column specifying the model group
+    coeff.mat$model <- c(rep(1:4,8),rep("All",10))
+    
     # reduce data to just specified models
-    coeff.red <- coeff.matrix[c(sort(seq),33:42),]
+    coeff.red <- coeff.mat[c(sort(seq),if ("All" %in% InfCoefModel()) {33:42} else {}),]
+    
     
     dwplot(coeff.red, vline = geom_vline(
       xintercept = 0,

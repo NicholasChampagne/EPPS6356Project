@@ -140,8 +140,8 @@ fluidPage(
                    # Input: check-box for models
                    checkboxGroupInput("InfCoefCheck",
                                       label = "Select Models:",
-                                      choices = c("Stage 1", "Stage 2", "Stage 3", "Stage 4"),
-                                      selected = c("Stage 1", "Stage 2", "Stage 3", "Stage 4")
+                                      choices = c("Stage 1", "Stage 2", "Stage 3", "Stage 4", "All"),
+                                      selected = c("Stage 1", "Stage 2", "Stage 3", "Stage 4", "All")
                    )
                  ),
                  
