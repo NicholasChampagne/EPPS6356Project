@@ -34,24 +34,5 @@ vcov <- vcov(fit.1)
 
 save(coeff.matrix, file = "Coeff.RData")
 save(vcov, file = "vcov.RData")
-load("Coeff.RData")
-load("crash.RData")
-load("vcov.RData")
-
 
 # Code test methods ----
-
-unique(crash$Road.Class)
-seq <- c()
-for (i in 1:2){
-  seq <- c(seq,seq(i,32,4))
-  
-}
-sort(seq)
-c(3:10)[-(4:5)]
-b <- 1
-a <- if (b == 1) {TRUE} else {FALSE}
-
-a <- c("1", "3", "4", "All")
-c(which(paste(1:4) %in% a),5)
-sort(c(5:1)[c(which(paste(1:4) %in% a),5)])
