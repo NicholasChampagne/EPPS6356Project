@@ -51,3 +51,7 @@ sort(seq)
 c(3:10)[-(4:5)]
 b <- 1
 a <- if (b == 1) {TRUE} else {FALSE}
+
+a <- c("1", "3", "4", "All")
+c(which(paste(1:4) %in% a),5)
+sort(c(5:1)[c(which(paste(1:4) %in% a),5)])

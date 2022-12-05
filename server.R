@@ -36,7 +36,7 @@ function(input, output){
     })
   
   # Input for INF page PROB
-  
+    
     # Select which Models to Display
     InfProbModel <- reactive({
       as.numeric(gsub("Stage ", "", input$InfProbCheck))
@@ -105,18 +105,25 @@ function(input, output){
   })
   
   # Desc Page, Pie Plot
-    output$PiePlot <- renderPlotly({
+    PiePlotFunc <- reactive({
       # Create a pie chart of the Selected Variable
       
       counts <-  crash %>% count(across(DescPieVar()))
       
-      plot_ly(data = counts, values = ~n, labels = ~get(DescPieVar()), 
+      pieplot <- plot_ly(data = counts, values = ~n, labels = ~get(DescPieVar()), 
               type = 'pie',
               textposition = 'inside',
               textinfo = 'label+percent', 
               width = 800, height = 800) %>% 
         layout(title = "Makeup of Accident Data by Variable")
+      
+      return(pieplot)
     })
+    
+    output$PiePlot <- renderPlotly({
+      PiePlotFunc()
+    })
+    
     
     # Desc Page, Bar Plot
     output$BarPlot <- renderPlotly({
@@ -139,31 +146,75 @@ function(input, output){
     })
   
   # Inf Page Coefficient Plot
-  output$InfCoefPlot <- renderPlot({
+  CoefPlotFunc <- reactive({
     
-    # for loop to remove non-selected models
+    # for loop to remove non-selected models through row selection
     seq <- c()
     for (i in as.numeric(InfCoefModel()[InfCoefModel() != "All"])) {
       seq <- c(seq,seq(i,32,4))
     }
     
-    # Load in coeff.matrix
+    # Load saved coefficient matrix from regression results (done separately so the application doesn't have to run the model)
     coeff.mat <- coeff.matrix
     
-    # New column specifying the model group
-    coeff.mat$model <- c(rep(1:4,8),rep("All",10))
+    # Change the names of the term variable for display reasons
+    coeff.mat$term <-  c(rep(c("(Intercept)", "City Street", "Farm to Market", "Interstate", "Non-Trafficway", "Other Road", "Tollways", "US & State Highways"), each = 4), c("Speed Limit", "Dangerous Weather", "Day", "Evening", "Night", "Angle", "Opposite", "Other", "Same", "At Intersection"))
     
-    # reduce data to just specified models
+    # Add new variable model for dwplot to sort lines by
+    coeff.mat$model <- c(rep(c("Stage 1", "Stage 2", "Stage 3", "Stage 4"), times = 8),rep("All Stages", 10))
+    
+    # Reduce data to just specified models
     coeff.red <- coeff.mat[c(sort(seq),if ("All" %in% InfCoefModel()) {33:42} else {}),]
     
+    # Brackets to show variables
+    brackets <- if ("All" %in% InfCoefModel()) {
+      list(c("Road Class", "City Street", "US & State Highways"),
+           c("Time of Day", "Day", "Night"),
+           c("Type of Collision", "Angle", "Same"))
+    } else {
+      list(c("Road Class", "City Street", "US & State Highways"))
+    }
+  
+    #Create the basic Coefficient Plot using the dotwhisker package
+    coefplot <- dwplot(coeff.red, 
+                       show_intercept = TRUE,
+                       vline = geom_vline(
+                                          xintercept = 0,
+                                          colour = "grey60",
+                                          linetype = 2),
+                       whisker_args = list(size = 1),
+                       dot_args = list(size = 1.5)
+                       ) + 
+      labs(colour = "Model", x = "Coefficient", title = "Coefficient Plot") + 
+      scale_colour_manual(values = c("#E69F00", "#009E73", "#D55E00", "#0072B2", "#CC79A7")[if ("All" %in% InfCoefModel()) {sort(c(5:1)[c(as.numeric(InfCoefModel()),5)])} else {sort(c(5:1)[as.numeric(InfCoefModel())])} ]) + 
+      theme(axis.text.y = element_text(size = 12, family = "serif"),
+            axis.title.x = element_text(size = 14, family = "serif"),
+            plot.title = element_text(size = 24, family = "serif", face = "bold"),
+            legend.text = element_text(size = 12, family = "serif"),
+            legend.title = element_text(size = 16, family = "serif"),
+            legend.key.size = unit(1, "cm"))
     
-    dwplot(coeff.red, vline = geom_vline(
-      xintercept = 0,
-      colour = "grey60",
-      linetype = 2)
-    )
+    # Create Brackets for categorical variables
+    coefplot <- coefplot %>% add_brackets(brackets, fontSize = 1.5)
+    
+    return(coefplot)
     
   })
+  
+  output$InfCoefPlot <- renderPlot({
+    print(CoefPlotFunc())
+  })
+
+  
+  output$InfCoefDwn <- downloadHandler(
+    # Saving the Probability Plot
+    filename = "CoefficientPlot.png",
+    content = function(file) {
+      png(file, width = 800, height = 1200, units = "px")
+      print(CoefPlotFunc())
+      dev.off()
+    }
+  )
   
   # Inf Page Probability Plot
   # Generate the Probability Table
@@ -215,13 +266,6 @@ function(input, output){
     probupper <-  exp(probest + probci) / (exp(probest + probci) + 1)
     problower <- exp(probest - probci) / (exp(probest - probci) + 1)
     
-    
-    #Objects to worry about:
-    #probest - Estimated log odds of model
-    #probprob - Estimated probabilities of model
-    #probupper - Upper bound of calculated probabilities
-    #problower - Lower bound of calculated probabilities
-    
     # Data frame with all the data combined into a singluar table
     probmodel <- data.frame(
       "Stage" = paste0("Stage ",rep(InfProbModel(), each = length(InfClassModel()))),
@@ -230,6 +274,8 @@ function(input, output){
       "lower" = c(t(problower[,InfClassModel()])),
       "upper" = c(t(probupper[,InfClassModel()]))
     )
+    
+    if (input$InfProbInv == T) {probmodel[,3:5] <- 1 - probmodel[,3:5]} else {}
     return(probmodel)
   })
   
@@ -245,22 +291,23 @@ function(input, output){
     )
     
     # estest as grob
-    estest.grob <- tableGrob(estest, rows = NULL )
-    
+    estest.grob <- tableGrob(estest, rows = NULL,
+                             theme = ttheme_default(base_size = 18))
+    yname <- ifelse(input$InfProbInv == T, "Probability of Continuing", "Probablity of Stopping")
     
     # Generate ggplot bar plot mapping probability
     plot.base <- ggplot(probmodel, aes(fill = eval(str2lang(InfProbDisplay()[2])), y = prob, x = eval(str2lang(InfProbDisplay()[1]))) ) + 
       geom_bar(position = "dodge", stat = "identity") + 
       geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(.9), width = 0.4, colour = "black") +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 12, family = "serif"),
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 16, family = "serif"),
             axis.title = element_text(size = 18, family = "serif"),
-            axis.text.y = element_text(size = 12, family = "serif"),
-            plot.title = element_text(size = 18, family = "serif"),
+            axis.text.y = element_text(size = 16, family = "serif"),
+            plot.title = element_text(size = 24, family = "serif", face = "bold"),
             legend.title = element_text(size = 18, family = "serif"),
             legend.text = element_text(size = 18, family = "serif"),
             legend.key.size = unit(1, "cm")) + 
-      xlab(InfProbDisplay()[1]) + ylab("Probablity of Stopping") +
-      ggtitle(paste0("Probability Representation of Road Class sorted by ",InfProbDisplay()[1])) + 
+      xlab(InfProbDisplay()[1]) + ylab(yname) +
+      ggtitle(paste0(if (input$InfProbInv == T) {"Inverted "} else {}, "Probability Representation of Road Class Sorted by ",InfProbDisplay()[1])) + 
       labs(fill = InfProbDisplay()[2]) + 
       scale_fill_manual(values = c("#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#0072B2", "#F0E442", "#D55E00", "#999999")[c(if (input$InfSortInput == "Class") {InfProbModel()} else {InfClassModel()})])
     
@@ -289,9 +336,9 @@ function(input, output){
     print(InfProbPlotFunc())
   })
   
-  output$InfCoefDwn <- downloadHandler(
+  output$InfProbDwn <- downloadHandler(
     # Saving the Probability Plot
-    filename = "test.png",
+    filename = "ProbabilityPlot.png",
     content = function(file) {
       png(file, width = 1200, height = 800, units = "px")
       grid.draw(InfProbPlotFunc())
