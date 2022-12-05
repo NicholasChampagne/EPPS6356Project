@@ -185,12 +185,12 @@ function(input, output){
                        whisker_args = list(size = 1),
                        dot_args = list(size = 1.5)
                        ) + 
-      labs(colour = "Model", x = "Coefficient", title = "Coefficient Plot") + 
+      labs(colour = "Stage", x = "Coefficient", title = "Coefficient Plot") + 
       scale_colour_manual(values = c("#E69F00", "#009E73", "#D55E00", "#0072B2", "#CC79A7")[if ("All" %in% InfCoefModel()) {sort(c(5:1)[c(as.numeric(InfCoefModel()),5)])} else {sort(c(5:1)[as.numeric(InfCoefModel())])} ]) + 
-      theme(axis.text.y = element_text(size = 12, family = "serif"),
-            axis.title.x = element_text(size = 14, family = "serif"),
+      theme(axis.text.y = element_text(size = 16, family = "serif"),
+            axis.title.x = element_text(size = 16, family = "serif"),
             plot.title = element_text(size = 24, family = "serif", face = "bold"),
-            legend.text = element_text(size = 12, family = "serif"),
+            legend.text = element_text(size = 16, family = "serif"),
             legend.title = element_text(size = 16, family = "serif"),
             legend.key.size = unit(1, "cm"))
     

@@ -43,8 +43,12 @@ fluidPage(
                          p("The regression uses a stopping ratio, which means that the regression predicts the log odds of being at or lower than 
                            the current category versus being in a higher category. Therefore, when beta is positive, the crash is less likely to be severe, while
                            when beta is negative, the crash is more likely to severe."),
-                         
-                         
+                         p("These are the reference levels for the model:"),
+                         p("Road Class - County Road"),
+                         p("Weather - Normal Weather"),
+                         p("Time of Day - Morning"),
+                         p("Type of Collision - One Car"),
+                         p("At Intersection - False")
                          )
                  )
                )
