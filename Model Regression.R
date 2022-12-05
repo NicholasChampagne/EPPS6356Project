@@ -1,7 +1,7 @@
 rm(list = ls())
 if(!is.null(dev.list())) dev.off()
 cat("\014") 
-library(VGAM); library(xtable); library(dotwhisker)
+library(VGAM)
 
 load("crash_base.RData")
 crash <- crash[,c(1,2,4:7,9,15:20)]
@@ -32,7 +32,7 @@ coeff.matrix[,2:5] <- lapply(coeff.matrix[2:5], as.numeric)
 
 vcov <- vcov(fit.1)
 
-save(coeff.matrix, file = "Coeff.RData")
+save(coeff.matrix, file = "coeff.RData")
 save(vcov, file = "vcov.RData")
 
 # Code test methods ----
