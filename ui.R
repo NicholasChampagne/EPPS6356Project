@@ -69,7 +69,7 @@ fluidPage(
                             
                             # Input: Radio Buttons for variable selection
                             radioButtons("DescRadio",
-                                         label = "Select Varaible:",
+                                         label = "Select Variable:",
                                          choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
                                          selected = "Crash Severity")
                             
@@ -94,7 +94,7 @@ fluidPage(
                             
                             # Input: Radio Buttons for variable selection
                             radioButtons("DescRadio2",
-                                         label = "Select Varaible:",
+                                         label = "Select Variable:",
                                          choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
                                          selected = "Crash Severity"
                             )
@@ -118,7 +118,7 @@ fluidPage(
                             
                             # Input: Radio Buttons for variable selection
                             radioButtons("DescRadio3",
-                                         label = "Select Varaible:",
+                                         label = "Select Variable:",
                                          choices = c("Crash Severity", "Road Class", "Speed Limit", "Weather", "Time of Day", "Type of Collision", "At Intersection Flag"),
                                          selected = "Crash Severity")
                             
