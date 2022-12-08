@@ -97,12 +97,21 @@ function(input, output){
   #### Output functions ####
     
   # Desc Page, Descriptive Plot
-  output$FreqPlot <- renderTable({
+  FreqTab <- reactive({
     
     # Create a frequency table of Selected Variable
     tab <- table(crash[,DescTabVar()])
     
+    tab <- as.data.frame(tab)
+    
+    colnames(tab) <- c(input$DescRadio, "Frequency")
+    
+    return(tab)
+    
   })
+    
+   output$FreqPlot <-  renderTable(FreqTab(),
+                                  align = "lr", bordered = T, striped = T)
   
   # Desc Page, Pie Plot
     PiePlotFunc <- reactive({
